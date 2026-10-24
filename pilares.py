@@ -102,6 +102,47 @@ class Lixeira(Medivel):
             total += item.tamanho()
         return total
 
+class Atalho(Item):
+    """
+    Representa um atalho (link simbolico) na arvore de arquivos.
+    Herda de Item, aproveitando nome, pai, mover_para e caminho.
+    """
+    __slots__ = ("__destino",)
+
+    def __init__(self, nome, destino, pai=None):
+        super().__init__(nome, pai)
+        self.__destino = None
+        self.redirecionar(destino)
+
+    @property
+    def destino(self):
+        """Expoe apenas a leitura do item de destino apontado pelo atalho."""
+        return self.__destino
+
+    def redirecionar(self, novo_destino):
+        """
+        Unica forma permitida de alterar o destino do atalho.
+        Impede referencias circulares para si mesmo ou para qualquer pasta ancestral.
+        """
+        if novo_destino is self:
+            raise ValueError("O atalho nao pode apontar para si mesmo.")
+
+        ancestral = self.pai
+        while ancestral is not None:
+            if novo_destino is ancestral:
+                raise ValueError("O atalho nao pode apontar para uma pasta ancestral.")
+            ancestral = ancestral.pai
+
+        self.__destino = novo_destino
+
+    def tamanho(self):
+        """Polimorfismo: um atalho ocupa sempre exatamente 1 byte fixo."""
+        return 1
+
+    def mostrar(self, recuo=0):
+        """Exibe o atalho formatado com o caminho absoluto do seu destino."""
+        espacos = " " * recuo
+        print(f"{espacos}{self.nome} -> {self.__destino.caminho}")
 
 def espaco_total(mediveis):
     total = 0
@@ -117,4 +158,3 @@ def tentar(descricao, acao):
         print("  -> Sucesso (inesperado)")
     except Exception as erro:
         print(f"  -> Falhou como esperado: {type(erro).__name__}: {erro}")
-        

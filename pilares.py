@@ -102,6 +102,7 @@ class Lixeira(Medivel):
             total += item.tamanho()
         return total
 
+
 class Atalho(Item):
     """
     Representa um atalho (link simbolico) na arvore de arquivos.
@@ -144,6 +145,7 @@ class Atalho(Item):
         espacos = " " * recuo
         print(f"{espacos}{self.nome} -> {self.__destino.caminho}")
 
+
 def espaco_total(mediveis):
     total = 0
     for medivel in mediveis:
@@ -158,3 +160,46 @@ def tentar(descricao, acao):
         print("  -> Sucesso (inesperado)")
     except Exception as erro:
         print(f"  -> Falhou como esperado: {type(erro).__name__}: {erro}")
+
+
+if __name__ == "__main__":
+    disco = Pasta("C:")
+    usuarios = Pasta("Users", disco)
+    usuario = Pasta("vinicius", usuarios)
+    desktop = Pasta("Desktop", usuario)
+    projetos = Pasta("Projetos", usuario)
+
+    documento = Arquivo("relatorio.txt", "Conteudo confidencial do relatorio", desktop)
+    script = Arquivo("automacao.py", "print('Ola Mundo')", desktop)
+
+    # 1 atalho para arquivo e 1 atalho para pasta independente
+    atalho_arquivo = Atalho("atalho_relatorio.lnk", documento, desktop)
+    atalho_pasta = Atalho("atalho_projetos.lnk", projetos, desktop)
+
+    print("=== Arvore de Arquivos Completa ===")
+    disco.mostrar()
+    print()
+
+    lixeira = Lixeira()
+    arquivo_lixo = Arquivo("antigo.log", "dados temporarios descartados")
+    lixeira.jogar_fora(arquivo_lixo)
+
+    total_calculado = espaco_total([documento, desktop, lixeira])
+    print(f"Espaco total (arquivo + pasta com atalhos + lixeira): {total_calculado} bytes")
+    print()
+
+    print("=== Testes de Falhas Esperadas ===")
+    def atribuir_destino_direto():
+        atalho_arquivo.destino = script
+
+    tentar("Modificar atalho.destino diretamente por atribuicao", atribuir_destino_direto)
+
+    def apontar_para_si_mesmo():
+        atalho_arquivo.redirecionar(atalho_arquivo)
+
+    tentar("Redirecionar atalho para si mesmo", apontar_para_si_mesmo)
+
+    def apontar_para_pasta_pai():
+        atalho_arquivo.redirecionar(desktop)
+
+    tentar("Redirecionar atalho para a pasta onde esta contido", apontar_para_pasta_pai)
